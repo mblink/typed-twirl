@@ -21,7 +21,7 @@ private[api] trait Compat {
 }
 
 private[api] trait FormatValueInstancesCompat {
-  final implicit def traversableOnceFormatValue[T <: Appendable[T], F <: Format[T], V](implicit
+  final implicit def traversableOnceFormatValue[T, F <: Format[T], V](implicit
       vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, TraversableOnce[V]] =
     FormatValue.instance((format: F, v: TraversableOnce[V]) =>
@@ -31,15 +31,14 @@ private[api] trait FormatValueInstancesCompat {
       }
     )
 
-  final implicit def traversableOnceNothingFormatValue[T <: Appendable[T], F <: Format[T]]
-      : FormatValue[T, F, TraversableOnce[Nothing]] =
+  final implicit def traversableOnceNothingFormatValue[T, F <: Format[T]]: FormatValue[T, F, TraversableOnce[Nothing]] =
     FormatValue.instance((format: F, _: TraversableOnce[Nothing]) => format.empty)
 
-  final implicit def optionFormatValue[T <: Appendable[T], F <: Format[T], V](implicit
+  final implicit def optionFormatValue[T, F <: Format[T], V](implicit
       vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, Option[V]] =
     FormatValue.instance((format: F, o: Option[V]) => o.fold(format.empty)(vFormatValue(format, _)))
 
-  final implicit def noneFormatValue[T <: Appendable[T], F <: Format[T]]: FormatValue[T, F, None.type] =
+  final implicit def noneFormatValue[T, F <: Format[T]]: FormatValue[T, F, None.type] =
     FormatValue.instance((format: F, _: None.type) => format.empty)
 }

@@ -19,7 +19,7 @@ trait Appendable[T]
  * @tparam T
  *   The underlying type that this format applies to.
  */
-trait Format[T <: Appendable[T]] {
+trait Format[T] {
   type Appendable = T
 
   /**

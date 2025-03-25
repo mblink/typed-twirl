@@ -41,6 +41,8 @@ lazy val nodeJs = {
     new NodeJSEnv()
 }
 
+def scalaReflect(scalaV: String) = "org.scala-lang" % "scala-reflect" % scalaV % "provided"
+
 lazy val api = crossProject(JVMPlatform, JSPlatform)
   .in(file("api"))
   .enablePlugins(Common)
@@ -55,13 +57,14 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
         "org.scalatest.tools.ScalaTestFramework"
       )
     ),
-    libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "2.3.0",
-    libraryDependencies += "org.scalatest"          %%% "scalatest" % ScalaTestVersion % Test,
-    libraryDependencies ++= (if (scalaVersion.value == Scala212)
-                               Seq(
-                                 "com.chuusai" %%% "shapeless" % "2.3.7"
-                               )
-                             else Seq())
+    libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %%% "scala-xml" % "2.3.0",
+      "org.scalatest"          %%% "scalatest" % ScalaTestVersion % Test,
+    ) ++ (scalaVersion.value match {
+      case v @ Scala212 => Seq(scalaReflect(v), "com.chuusai" %%% "shapeless" % "2.3.13")
+      case v @ Scala213 => Seq(scalaReflect(v))
+      case Scala33      => Seq()
+    })
   )
 
 lazy val apiJvm = api.jvm
