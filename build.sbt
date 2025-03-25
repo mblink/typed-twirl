@@ -7,6 +7,8 @@ import org.scalajs.jsenv.nodejs.NodeJSEnv
 import java.util.Properties
 import java.io.StringWriter
 
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 val ScalaTestVersion = "3.2.19"
 
 def parserCombinators(scalaVersion: String) = "org.scala-lang.modules" %% "scala-parser-combinators" % {
@@ -15,6 +17,17 @@ def parserCombinators(scalaVersion: String) = "org.scala-lang.modules" %% "scala
     case _             => "2.4.0"
   }
 }
+
+lazy val commonSettings = Seq(
+  sonatypeProfileName := "org.playframework",
+  scalaVersion := Scala212,
+  crossScalaVersions := ScalaVersions,
+  scalacOptions ++= (scalaVersion.value match {
+    case Scala213 => Seq("-Vimplicits", "-Vimplicits-verbose-tree")
+    case Scala3 => Seq("-explain")
+    case Scala212 => Seq()
+  }),
+)
 
 val previousVersion: Option[String] = Some("2.0.1")
 
@@ -62,10 +75,8 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
   .in(file("api"))
   .enablePlugins(Common, Playdoc, Omnidoc)
   .configs(Docs)
+  .settings(commonSettings)
   .settings(
-    sonatypeProfileName := "org.playframework",
-    scalaVersion        := Scala212,
-    crossScalaVersions  := ScalaVersions,
     mimaSettings,
     name  := "twirl-api",
     jsEnv := nodeJs,
@@ -87,10 +98,8 @@ lazy val apiJs  = api.js
 lazy val parser = project
   .in(file("parser"))
   .enablePlugins(Common, Omnidoc)
+  .settings(commonSettings)
   .settings(
-    sonatypeProfileName := "org.playframework",
-    scalaVersion        := Scala212,
-    crossScalaVersions  := ScalaVersions,
     mimaSettings,
     name := "twirl-parser",
     libraryDependencies += parserCombinators(scalaVersion.value),
@@ -101,10 +110,8 @@ lazy val parser = project
 lazy val compiler = project
   .in(file("compiler"))
   .enablePlugins(Common, Omnidoc, BuildInfoPlugin)
+  .settings(commonSettings)
   .settings(
-    sonatypeProfileName := "org.playframework",
-    scalaVersion        := Scala212,
-    crossScalaVersions  := ScalaVersions,
     mimaSettings,
     name := "twirl-compiler",
     libraryDependencies ++= {
@@ -131,11 +138,11 @@ lazy val plugin = project
   .in(file("sbt-twirl"))
   .enablePlugins(SbtPlugin)
   .dependsOn(compiler)
+  .settings(commonSettings)
   .settings(
     name                                    := "sbt-twirl",
     organization                            := "org.playframework.twirl",
-    sonatypeProfileName                     := "org.playframework",
-    scalaVersion                            := Scala212,
+    crossScalaVersions := Nil,
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
     crossScalaVersions += Scala3,
     pluginCrossBuild / sbtVersion := {
@@ -169,11 +176,9 @@ lazy val mavenPlugin = project
   .in(file("maven-twirl"))
   .enablePlugins(SbtMavenPlugin)
   .dependsOn(compiler)
+  .settings(commonSettings)
   .settings(
     name                  := "twirl-maven-plugin",
-    sonatypeProfileName   := "org.playframework",
-    scalaVersion          := Scala212,
-    crossScalaVersions    := ScalaVersions,
     mavenPluginGoalPrefix := "twirl",
     mavenLaunchOpts ++= Seq(
       // Uncomment to debug plugin code while Maven scripted test is running
