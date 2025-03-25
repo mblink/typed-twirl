@@ -1,0 +1,27 @@
+/*
+ * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ */
+
+package play.twirl.api
+
+import scala.collection.immutable
+import scala.jdk.CollectionConverters._
+
+private[api] trait Compat {
+  final def javaListToScala[A](l: java.util.List[A]): scala.collection.mutable.Buffer[A] = l.asScala
+
+  final def checkStringContextLengths(sc: StringContext, args: scala.collection.Seq[Any]): Unit =
+    StringContext.checkLengths(args, sc.parts)
+}
+
+private[api] trait FormatValueInstancesCompat {
+  implicit final def iterableOnceFormatValue[T <: Appendable[T], F <: Format[T], V](
+    implicit vFormatValue: FormatValue[T, F, V]
+  ): FormatValue[T, F, IterableOnce[V]] =
+    FormatValue.instance((format: F, iterable: IterableOnce[V]) => iterable match {
+      case s: immutable.Seq[_] => format.fill(s.map(vFormatValue(format, _)))
+      case None => format.empty
+      case Some(v) => vFormatValue(format, v)
+      case i => format.fill(i.iterator.map(vFormatValue(format, _)).toList)
+    })
+}

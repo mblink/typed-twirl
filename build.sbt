@@ -90,6 +90,9 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
     ),
     libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "2.3.0",
     libraryDependencies += "org.scalatest"          %%% "scalatest" % ScalaTestVersion % Test,
+    libraryDependencies ++= (if (scalaVersion.value == Scala212) Seq(
+      "com.chuusai" %%% "shapeless" % "2.3.7"
+    ) else Seq())
   )
 
 lazy val apiJvm = api.jvm

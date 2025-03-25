@@ -21,14 +21,12 @@ object TwirlFeatureImports {
   /**
    * Provides the `@defining` language feature, that lets you set a local val that can be reused.
    *
-   * @param t
+   * @param a
    *   The defined val.
    * @param handler
    *   The block to handle it.
    */
-  def defining[T](t: T)(handler: T => Any): Any = {
-    handler(t)
-  }
+  def defining[A, B](a: A)(handler: A => B): B = handler(a)
 
   /** Provides the `@using` language feature. */
   def using[T](t: T): T = t
@@ -46,15 +44,14 @@ object TwirlFeatureImports {
    * Provides default values, such that an empty sequence, string, option, false boolean, or null will render the
    * default value.
    */
-  implicit class TwirlDefaultValue(default: Any) {
-    def ?:(x: Any): Any =
-      x match {
-        case ""    => default
-        case Nil   => default
-        case false => default
-        case 0     => default
-        case None  => default
-        case _     => x
-      }
+  sealed class TwirlDefaultValue[A](default: A)(empty: A => Boolean) {
+    final def ?:(a: A): A = if (empty(a)) default else a
   }
+
+  implicit class TwirlBooleanDefaultValue(default: Boolean)     extends TwirlDefaultValue(default)(_ == false)
+  implicit class TwirlIntDefaultValue(default: Int)             extends TwirlDefaultValue(default)(_ == 0)
+  implicit class TwirlStringDefaultValue(default: String)       extends TwirlDefaultValue(default)(_ == "")
+  implicit class TwirlListDefaultValue[A](default: List[A])     extends TwirlDefaultValue(default)(_.isEmpty)
+  implicit class TwirlSeqDefaultValue[A](default: Seq[A])       extends TwirlDefaultValue(default)(_.isEmpty)
+  implicit class TwirlOptionDefaultValue[A](default: Option[A]) extends TwirlDefaultValue(default)(_.isEmpty)
 }

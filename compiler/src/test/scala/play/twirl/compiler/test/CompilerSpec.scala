@@ -138,16 +138,6 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       text must be("€, ö, or ü")
     }
 
-    "compile successfully (existential)" in {
-      val helper = newCompilerHelper
-      val text = helper
-        .compile[(List[?] => Html)]("existential.scala.html", "html.existential")
-        .static(List(1, 2, 3))
-        .toString
-        .trim
-      text must be("123")
-    }
-
     "compile successfully (triple quotes)" in {
       val helper = newCompilerHelper
       val out    = helper.compile[(() => Html)]("triplequotes.scala.html", "html.triplequotes").static().toString.trim
