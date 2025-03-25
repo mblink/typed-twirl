@@ -6,10 +6,9 @@ package play.twirl.api
 
 import java.util.Optional
 import scala.collection.immutable
-import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 
-case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]](format: F) {
+case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]](format: F) extends BaseScalaTemplateCompat {
   // The overloaded methods are here for speed. The compiled templates
   // can take advantage of them for a 12% performance boost
   def _display_(x: AnyVal): T            = format.escape(x.toString)
@@ -28,17 +27,17 @@ case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]](format: F) {
         (if (key.isPresent) Some(key.get) else None) match {
           case None    => format.empty
           case Some(v) => _display_(v)
-          case null    => format.empty
+          case _       => format.empty
         }
       case xml: scala.xml.NodeSeq     => format.raw(xml.toString())
       case escapeds: immutable.Seq[_] => format.fill(escapeds.map(_display_))
-      case escapeds: IterableOnce[_]  => format.fill(escapeds.iterator.map(_display_).toList)
+      case escapeds: IterableOnce[_]  => format.fill(mapIterableOnce(escapeds)(_display_))
       case escapeds: Array[_]         => format.fill(escapeds.view.map(_display_).toList)
       case escapeds: java.util.List[_] =>
-        format.fill(escapeds.asScala.map(_display_).toList)
+        format.fill(javaListToScala(escapeds).map(_display_).toList)
       case string: String => format.escape(string)
       case v if v != null => format.escape(v.toString)
-      case null           => format.empty
+      case _              => format.empty
     }
   }
 }
