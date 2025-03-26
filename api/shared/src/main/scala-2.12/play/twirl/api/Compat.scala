@@ -31,6 +31,10 @@ private[api] trait FormatValueInstancesCompat {
       }
     )
 
+  final implicit def traversableOnceNothingFormatValue[T <: Appendable[T], F <: Format[T]]
+      : FormatValue[T, F, TraversableOnce[Nothing]] =
+    FormatValue.instance((format: F, _: TraversableOnce[Nothing]) => format.empty)
+
   final implicit def optionFormatValue[T <: Appendable[T], F <: Format[T], V](implicit
       vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, Option[V]] =

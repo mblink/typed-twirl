@@ -5,7 +5,7 @@
 package play.twirl.api
 
 import scala.collection.immutable
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 private[api] trait Compat {
   final def javaListToScala[A](l: java.util.List[A]): scala.collection.mutable.Buffer[A] = l.asScala
@@ -15,13 +15,19 @@ private[api] trait Compat {
 }
 
 private[api] trait FormatValueInstancesCompat {
-  implicit final def iterableOnceFormatValue[T <: Appendable[T], F <: Format[T], V](
-    implicit vFormatValue: FormatValue[T, F, V]
+  final implicit def iterableOnceFormatValue[T <: Appendable[T], F <: Format[T], V](implicit
+      vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, IterableOnce[V]] =
-    FormatValue.instance((format: F, iterable: IterableOnce[V]) => iterable match {
-      case s: immutable.Seq[V] => format.fill(s.map(vFormatValue(format, _)))
-      case None => format.empty
-      case Some(v) => vFormatValue(format, v)
-      case i => format.fill(i.iterator.map(vFormatValue(format, _)).toList)
-    })
+    FormatValue.instance((format: F, iterable: IterableOnce[V]) =>
+      iterable match {
+        case s: immutable.Seq[V] => format.fill(s.map(vFormatValue(format, _)))
+        case None                => format.empty
+        case Some(v)             => vFormatValue(format, v)
+        case i                   => format.fill(i.iterator.map(vFormatValue(format, _)).toList)
+      }
+    )
+
+  final implicit def iterableOnceNothingFormatValue[T <: Appendable[T], F <: Format[T]]
+      : FormatValue[T, F, IterableOnce[Nothing]] =
+    FormatValue.instance((format: F, _: IterableOnce[Nothing]) => format.empty)
 }
