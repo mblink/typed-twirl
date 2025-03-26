@@ -153,29 +153,6 @@ lazy val plugin = project
     },
   )
 
-lazy val mavenPlugin = project
-  .in(file("maven-twirl"))
-  .enablePlugins(SbtMavenPlugin)
-  .dependsOn(compiler)
-  .settings(commonSettings)
-  .settings(
-    name                  := "twirl-maven-plugin",
-    mavenPluginGoalPrefix := "twirl",
-    mavenLaunchOpts ++= Seq(
-      // Uncomment to debug plugin code while Maven scripted test is running
-//      "-agentlib:jdwp=transport=dt_socket,address=localhost:62555,suspend=y,server=y",
-      version.apply { v => s"-Dplugin.version=$v" }.value,
-      scalaVersion.apply { v => s"-Dscala.binaryVersion=${CrossVersion.binaryScalaVersion(v)}" }.value
-    ),
-    publishM2 := publishM2
-      .dependsOn(compiler / publishM2)
-      .dependsOn(parser / publishM2)
-      .dependsOn(apiJvm / publishM2)
-      .value,
-    libraryDependencies += "org.codehaus.plexus" % "plexus-utils" % "4.0.2",
-    Compile / headerSources ++= (baseDirectory.value / "src" / "maven-test" ** ("*.java" || "*.scala" || "*.scala.html") --- (baseDirectory.value ** "target" ** "*")).get,
-  )
-
 // Version file
 def generateVersionFile =
   Def.task {
