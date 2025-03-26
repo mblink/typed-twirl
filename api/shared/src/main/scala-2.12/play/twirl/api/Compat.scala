@@ -39,4 +39,7 @@ private[api] trait FormatValueInstancesCompat {
       vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, Option[V]] =
     FormatValue.instance((format: F, o: Option[V]) => o.fold(format.empty)(vFormatValue(format, _)))
+
+  final implicit def noneFormatValue[T <: Appendable[T], F <: Format[T]]: FormatValue[T, F, None.type] =
+    FormatValue.instance((format: F, _: None.type) => format.empty)
 }

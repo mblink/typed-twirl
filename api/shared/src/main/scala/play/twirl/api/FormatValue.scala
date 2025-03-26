@@ -135,9 +135,6 @@ sealed trait FormatValueInstances1 extends FormatValueInstancesCompat {
       format.fill(javaListToScala(list).map(vFormatValue(format, _)).toList)
     )
 
-  final implicit def noneFormatValue[T <: Appendable[T], F <: Format[T]]: FormatValue[T, F, None.type] =
-    FormatValue.instance((format: F, _: None.type) => format.empty)
-
   final implicit def optionalFormatValue[T <: Appendable[T], F <: Format[T], V](implicit
       optionVFormatValue: FormatValue[T, F, Option[V]]
   ): FormatValue[T, F, Optional[V]] =
