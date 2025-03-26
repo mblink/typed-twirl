@@ -38,8 +38,7 @@ lazy val twirl = project
     (Compile / headerSources) ++=
       ((baseDirectory.value ** ("*.properties" || "*.md" || "*.sbt" || "*.scala.html"))
         --- (baseDirectory.value ** "target" ** "*")
-        --- (baseDirectory.value / "compiler" / "version.properties")
-        --- (baseDirectory.value / "docs" ** "*")).get ++
+        --- (baseDirectory.value / "compiler" / "version.properties")).get ++
         (baseDirectory.value / "project" ** "*.scala" --- (baseDirectory.value ** "target" ** "*")).get
   )
   .aggregate(apiJvm, apiJs, parser, compiler, plugin)
@@ -53,8 +52,7 @@ lazy val nodeJs = {
 
 lazy val api = crossProject(JVMPlatform, JSPlatform)
   .in(file("api"))
-  .enablePlugins(Common, Playdoc, Omnidoc)
-  .configs(Docs)
+  .enablePlugins(Common)
   .settings(commonSettings)
   .settings(
     name  := "twirl-api",
@@ -81,7 +79,7 @@ lazy val apiJs  = api.js
 
 lazy val parser = project
   .in(file("parser"))
-  .enablePlugins(Common, Omnidoc)
+  .enablePlugins(Common)
   .settings(commonSettings)
   .settings(
     name := "twirl-parser",
@@ -92,7 +90,7 @@ lazy val parser = project
 
 lazy val compiler = project
   .in(file("compiler"))
-  .enablePlugins(Common, Omnidoc, BuildInfoPlugin)
+  .enablePlugins(Common, BuildInfoPlugin)
   .settings(commonSettings)
   .settings(
     name := "twirl-compiler",
@@ -124,9 +122,8 @@ lazy val plugin = project
   .settings(
     name                                    := "sbt-twirl",
     organization                            := "bondlink",
-    crossScalaVersions                      := Nil,
+    crossScalaVersions                      := Seq(Scala212, Scala3),
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
-    crossScalaVersions += Scala3,
     pluginCrossBuild / sbtVersion := {
       scalaBinaryVersion.value match {
         case "2.12" =>
