@@ -107,7 +107,6 @@ lazy val compiler = project
     run / fork                             := true,
     buildInfoKeys                          := Seq[BuildInfoKey](scalaVersion),
     buildInfoPackage                       := "play.twirl.compiler",
-    publishM2                              := publishM2.dependsOn(saveCompilerVersion).value,
     publish                                := publish.dependsOn(saveCompilerVersion).value,
     publishLocal                           := publishLocal.dependsOn(saveCompilerVersion).value
   )

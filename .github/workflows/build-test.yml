@@ -19,7 +19,6 @@ jobs:
     with:
       cmd: |
         sbt validateCode
-        sbt +compiler/publishM2
 
   tests:
     name: Tests
