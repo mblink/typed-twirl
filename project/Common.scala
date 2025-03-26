@@ -1,5 +1,5 @@
 /*
- * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
  */
 
 import sbt.Keys._
@@ -14,7 +14,7 @@ object Common extends AutoPlugin {
 
   override def requires = JvmPlugin
 
-  val repoName = "twirl"
+  val repoName = "typed-twirl"
 
   val javacParameters = Seq(
     "-encoding",
@@ -36,7 +36,7 @@ object Common extends AutoPlugin {
 
   def crossScalacOptions(version: String) = {
     CrossVersion.partialVersion(version) match {
-      case Some((2, n)) if n < 12 =>
+      case Some((2, _)) =>
         scalacParameters ++ Seq(
           "-release:17",
           "-Ywarn-unused:imports",
@@ -44,7 +44,8 @@ object Common extends AutoPlugin {
           "-Xlint",
           "-Ywarn-dead-code"
         )
-      case _ => scalacParameters
+      case Some((3, _)) =>
+        scalacParameters
     }
   }
 
@@ -58,11 +59,10 @@ object Common extends AutoPlugin {
 
   override def globalSettings =
     Seq(
-      organization         := "org.playframework.twirl",
-      organizationName     := "The Play Framework Project",
-      organizationHomepage := Some(url("https://playframework.com/")),
-      homepage             := Some(url(s"https://github.com/playframework/${repoName}")),
-      licenses             := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+      version      := "0.1.0-SNAPSHOT",
+      organization := "bondlink",
+      homepage     := Some(url(s"https://github.com/mblink/$repoName")),
+      licenses     := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
       developers += Developer(
         "playframework",
         "The Play Framework Contributors",

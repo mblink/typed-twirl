@@ -1,10 +1,11 @@
 /*
- * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
  */
+
 package play.twirl.compiler
 package test
 
-import java.io._
+import java.io.*
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,14 +20,14 @@ import dotty.tools.dotc.reporting.Reporter
 import dotty.tools.io.PlainDirectory
 import dotty.tools.io.Directory
 import dotty.tools.io.ClassPath
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import play.twirl.parser.TwirlIO
 
 object Helper {
   case class CompilationError(message: String, line: Int, column: Int) extends RuntimeException(message)
 
   class CompilerHelper(sourceDir: File, val generatedDir: File, generatedClasses: File) {
-    import java.net._
+    import java.net.*
     import scala.collection.mutable
 
     val twirlCompiler = TwirlCompiler
@@ -47,7 +48,7 @@ object Helper {
 
       def inject(constructorArgs: Any*): T = {
         classloader.loadClass(className).getConstructors match {
-          case Array(single) => getF(single.newInstance(constructorArgs.asInstanceOf[Seq[AnyRef]]: _*))
+          case Array(single) => getF(single.newInstance(constructorArgs.asInstanceOf[Seq[AnyRef]]*))
           case other =>
             throw new IllegalStateException(className + " does not declare exactly one constructor: " + other)
         }
@@ -91,7 +92,7 @@ object Helper {
 
       val reporter = driver.compile()
 
-      if (reporter.hasErrors) {
+      if reporter.hasErrors then {
         val error   = reporter.allErrors.sortBy(_.pos.point).head
         val message = error.msg
         val pos     = error.pos

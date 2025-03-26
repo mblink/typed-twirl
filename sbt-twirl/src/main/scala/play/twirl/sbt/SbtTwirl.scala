@@ -1,5 +1,5 @@
 /*
- * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package play.twirl.sbt
@@ -13,7 +13,7 @@ import scala.io.Codec
 
 object Import {
   object TwirlKeys {
-    val twirlVersion    = SettingKey[String]("twirl-version", "Twirl version used for twirl-api dependency")
+    val twirlVersion    = SettingKey[String]("twirl-version", "Twirl version used for typed-twirl-api dependency")
     val templateFormats = SettingKey[Map[String, String]]("twirl-template-formats", "Defined twirl template formats")
     val templateImports = SettingKey[Seq[String]]("twirl-template-imports", "Extra imports for twirl templates")
     val constructorAnnotations = SettingKey[Seq[String]](
@@ -48,7 +48,7 @@ object SbtTwirl extends AutoPlugin {
       compileTemplates / includeFilter       := "*.scala.*",
       compileTemplates / excludeFilter       := HiddenFileFilter,
       (compileTemplates / sourceDirectories) := Seq(sourceDirectory.value / "twirl"),
-      (Defaults.ConfigGlobal / watchSources) +=
+      (Defaults.ConfigZero / watchSources) +=
         WatchSource(
           (compileTemplates / sourceDirectory).value,
           (compileTemplates / includeFilter).value,
@@ -90,11 +90,7 @@ object SbtTwirl extends AutoPlugin {
           case None    => false
         }
         // TODO: can we use %%% from sbt-crossproject now that we're on Scala.js 1.x?
-        val groupId = {
-          if (VersionNumber(twirlVersion.value).matchesSemVer(SemanticSelector(">=2.0.0-M1"))) "org.playframework.twirl"
-          else "com.typesafe.play"
-        }
-        val baseModuleID = groupId %% "twirl-api" % twirlVersion.value
+        val baseModuleID = "bondlink" %% "typed-twirl-api" % twirlVersion.value
         if (isScalaJS) baseModuleID.cross(crossVer) else baseModuleID
       }
     )

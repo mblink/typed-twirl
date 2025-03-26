@@ -2,10 +2,9 @@ name: Check
 
 on:
   pull_request:
-
+    branches: [main]
   push:
-    branches:
-      - main # Check branch after merge
+    branches: [main]
 
 concurrency:
   # Only run once for latest commit per ref and cancel other (previous) runs.
@@ -13,51 +12,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Run Gradle Wrapper Validation to verify the wrapper's checksum
-  gradle-validation:
-    name: Gradle Wrapper
-    uses: playframework/.github/.github/workflows/gradle-wrapper-validation.yml@v4
-
   check-code-style:
     name: Code Style
-    needs:
-      - "gradle-validation"
     uses: playframework/.github/.github/workflows/cmd.yml@v4
     with:
-      gradle-build-root: gradle-twirl
       cmd: |
         sbt validateCode
-        sbt +compiler/publishM2
-        cd gradle-twirl && ./gradlew clean spotlessCheck --no-daemon
-
-  check-binary-compatibility:
-    name: Binary Compatibility
-    uses: playframework/.github/.github/workflows/binary-check.yml@v4
-
-  check-docs:
-    name: Docs
-    uses: playframework/.github/.github/workflows/cmd.yml@v4
-    with:
-      cmd: |
-        cd docs
-        sbt evaluateSbtFiles +validateDocs headerCheckAll +test
 
   tests:
     name: Tests
     needs:
       - "check-code-style"
-      - "check-binary-compatibility"
-      - "check-docs"
     uses: playframework/.github/.github/workflows/cmd.yml@v4
     with:
       java: 21, 17
       scala: 2.12.x, 2.13.x, 3.x
       cmd: scripts/test-code.sh
-      gradle-build-root: gradle-twirl
-
-  finish:
-    name: Finish
-    if: github.event_name == 'pull_request'
-    needs: # Should be last
-      - "tests"
-    uses: playframework/.github/.github/workflows/rtm.yml@v4

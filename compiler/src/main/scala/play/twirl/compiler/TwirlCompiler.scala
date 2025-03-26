@@ -1,5 +1,5 @@
 /*
- * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package play.twirl.compiler
@@ -452,7 +452,7 @@ object TwirlCompiler {
     children.size match {
       case 0 => Nil
       case 1 => Nil :+ "_display_(" :+ children :+ ")"
-      case _ => Nil :+ "_display_(Seq[Any](" :+ children :+ "))"
+      case _ => Nil :+ "_display_(Seq(" :+ children :+ "))"
     }
   }
 
@@ -502,9 +502,9 @@ object TwirlCompiler {
   }
 
   def templateCode(template: Template, resultType: String): collection.Seq[Any] = {
-    val defs = (template.sub ++ template.defs).map {
-      case t: Template if t.name.toString == "" => templateCode(t, resultType)
-      case t: Template => {
+    val tpls = template.sub.map(t =>
+      if (t.name.toString == "") templateCode(t, resultType)
+      else {
         Nil :+ (if (t.name.str.startsWith("implicit")) "implicit def " else "def ") :+ Source(
           t.name.str,
           t.name.pos
@@ -513,6 +513,9 @@ object TwirlCompiler {
           t.params.pos
         ) :+ ":" :+ resultType :+ " = {_display_(" :+ templateCode(t, resultType) :+ ")};"
       }
+    )
+
+    val defs = template.defs.map {
       case Def(name, params, resultType, block) => {
         Nil :+ (if (name.str.startsWith("implicit")) "implicit def " else "def ") :+ Source(
           name.str,
@@ -526,7 +529,7 @@ object TwirlCompiler {
 
     val imports = formatImports(template.imports)
 
-    Nil :+ imports :+ "\n" :+ defs :+ "\n" :+ "Seq[Any](" :+ visit(template.content, Nil) :+ ")"
+    Nil :+ imports :+ "\n" :+ (tpls ++ defs) :+ "\n" :+ "Seq(" :+ visit(template.content, Nil) :+ ")"
   }
 
   def generateCode(
@@ -576,7 +579,7 @@ class """ :+ name :+ " " :+ constructorAnnotations :+ " " :+ Source(constructor.
 package """ :+ packageName :+ """
 
 """ :+ imports :+ """
-""" :+ classDeclaration :+ """ extends _root_.play.twirl.api.BaseScalaTemplate[""" :+ resultType :+ """,_root_.play.twirl.api.Format[""" :+ resultType :+ """]](""" :+ formatterType :+ """)""" :+
+""" :+ classDeclaration :+ """ extends _root_.play.twirl.api.BaseScalaTemplate[""" :+ resultType :+ """,""" :+ formatterType :+ """.type](""" :+ formatterType :+ """)""" :+
         (if (templateType.nonEmpty) s" with $templateType" else "") :+ """ {
 
   /*""" :+ root.comment.map(_.msg).getOrElse("") :+ """*/
@@ -663,7 +666,6 @@ package """ :+ packageName :+ """
   object TemplateAsFunctionCompiler {
     import scala.meta._
     import scala.meta.inputs.Input
-    import scala.meta.tokens.Tokens
     import scala.meta.parsers.Parse
     import scala.meta.parsers.ParseException
 

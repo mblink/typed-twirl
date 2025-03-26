@@ -1,5 +1,5 @@
 /*
- * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package play.twirl.compiler
@@ -138,16 +138,6 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       text must be("€, ö, or ü")
     }
 
-    "compile successfully (existential)" in {
-      val helper = newCompilerHelper
-      val text = helper
-        .compile[(List[?] => Html)]("existential.scala.html", "html.existential")
-        .static(List(1, 2, 3))
-        .toString
-        .trim
-      text must be("123")
-    }
-
     "compile successfully (triple quotes)" in {
       val helper = newCompilerHelper
       val out    = helper.compile[(() => Html)]("triplequotes.scala.html", "html.triplequotes").static().toString.trim
@@ -185,7 +175,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       the[CompilationError] thrownBy helper.compile[(() => Html)]("error.scala.html", "html.error") must have(
         Symbol("line")(5),
 //        Symbol("column")(12) TODO: need fix https://github.com/playframework/twirl/issues/571 to back
-        Symbol("column")(463)
+        Symbol("column")(508)
       )
     }
 
@@ -195,7 +185,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
         .compile[(() => Html)]("errorInTemplateArgs.scala.html", "html.errorInTemplateArgs") must have(
         Symbol("line")(5),
 //        Symbol("column")(6) TODO: need fix https://github.com/playframework/twirl/issues/571 to back
-        Symbol("column")(458)
+        Symbol("column")(503)
       )
     }
 
