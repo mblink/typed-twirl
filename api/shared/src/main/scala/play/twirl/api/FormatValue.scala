@@ -6,7 +6,6 @@ package play.twirl.api
 
 import java.util.{ List => JList }
 import java.util.Optional
-import scala.collection.immutable
 import scala.language.implicitConversions
 
 sealed trait FormatValue[T <: Appendable[T], F <: Format[T], -V] { self =>

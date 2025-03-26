@@ -18,16 +18,7 @@ def parserCombinators(scalaVersion: String) = "org.scala-lang.modules" %% "scala
   }
 }
 
-lazy val commonSettings = Seq(
-  scalaVersion       := Scala212,
-  crossScalaVersions := ScalaVersions,
-  scalacOptions ++= (scalaVersion.value match {
-    case Scala213          => Seq("-Vimplicits", "-Vimplicits-verbose-tree")
-    case Scala33 | Scala36 => Seq("-explain")
-    case Scala212          => Seq()
-  }),
-  gitPublishDir := file("/src/maven-repo"),
-)
+ThisBuild / gitPublishDir := file("/src/maven-repo")
 
 lazy val twirl = project
   .in(file("."))
@@ -53,7 +44,6 @@ lazy val nodeJs = {
 lazy val api = crossProject(JVMPlatform, JSPlatform)
   .in(file("api"))
   .enablePlugins(Common)
-  .settings(commonSettings)
   .settings(
     name  := "typed-twirl-api",
     jsEnv := nodeJs,
@@ -80,7 +70,6 @@ lazy val apiJs  = api.js
 lazy val parser = project
   .in(file("parser"))
   .enablePlugins(Common)
-  .settings(commonSettings)
   .settings(
     name := "typed-twirl-parser",
     libraryDependencies += parserCombinators(scalaVersion.value),
@@ -91,7 +80,6 @@ lazy val parser = project
 lazy val compiler = project
   .in(file("compiler"))
   .enablePlugins(Common, BuildInfoPlugin)
-  .settings(commonSettings)
   .settings(
     name := "typed-twirl-compiler",
     libraryDependencies ++= {
@@ -117,10 +105,10 @@ lazy val plugin = project
   .in(file("sbt-twirl"))
   .enablePlugins(SbtPlugin)
   .dependsOn(compiler)
-  .settings(commonSettings)
   .settings(
     name                                    := "sbt-typed-twirl",
     organization                            := "bondlink",
+    scalaVersion                            := Scala212,
     crossScalaVersions                      := Seq(Scala212, Scala36),
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
     pluginCrossBuild / sbtVersion := {
