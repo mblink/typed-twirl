@@ -1,49 +1,41 @@
 <!--- Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com> -->
 
-# Twirl
+# Typed Twirl
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/playframework?label=follow&style=flat&logo=twitter&color=brightgreen)](https://twitter.com/playframework)
-[![Discord](https://img.shields.io/discord/931647755942776882?logo=discord&logoColor=white)](https://discord.gg/g5s2vtZ4Fa)
-[![GitHub Discussions](https://img.shields.io/github/discussions/playframework/playframework?&logo=github&color=brightgreen)](https://github.com/playframework/playframework/discussions)
-[![StackOverflow](https://img.shields.io/static/v1?label=stackoverflow&logo=stackoverflow&logoColor=fe7a16&color=brightgreen&message=playframework)](https://stackoverflow.com/tags/playframework)
-[![YouTube](https://img.shields.io/youtube/channel/views/UCRp6QDm5SDjbIuisUpxV9cg?label=watch&logo=youtube&style=flat&color=brightgreen&logoColor=ff0000)](https://www.youtube.com/channel/UCRp6QDm5SDjbIuisUpxV9cg)
-[![Twitch Status](https://img.shields.io/twitch/status/playframework?logo=twitch&logoColor=white&color=brightgreen&label=live%20stream)](https://www.twitch.tv/playframework)
-[![OpenCollective](https://img.shields.io/opencollective/all/playframework?label=financial%20contributors&logo=open-collective)](https://opencollective.com/playframework)
+Twirl is the [Play][play-site] [template engine][docs]. See the Play [documentation for the template engine][docs] for
+more information about the template syntax.
 
-[![Build Status](https://github.com/playframework/twirl/actions/workflows/build-test.yml/badge.svg)](https://github.com/playframework/twirl/actions/workflows/build-test.yml)
-[![Maven](https://img.shields.io/maven-central/v/org.playframework.twirl/twirl-api_2.13.svg?logo=apache-maven)](https://mvnrepository.com/artifact/org.playframework.twirl/twirl-api_2.13)
-[![Repository size](https://img.shields.io/github/repo-size/playframework/twirl.svg?logo=git)](https://github.com/playframework/twirl)
-[![Scala Steward badge](https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=)](https://scala-steward.org)
-[![Mergify Status](https://img.shields.io/endpoint.svg?url=https://api.mergify.com/v1/badges/playframework/twirl&style=flat)](https://mergify.com)
+Typed Twirl is a variant that limits the types of values that can be rendered in a template to only those for which
+there exists an instance of the [`FormatValue` typeclass](api/shared/src/main/scala/play/twirl/api/FormatValue.scala).
 
-Twirl is the [Play][play-site] [template engine][docs].
+The motivation is to eliminate the chance of accidentally rendering a value using it's `toString` representation.
+For example, using `cats.data.NonEmptyList`, it's easy to forget to call `.toList` and end up with this:
 
-Twirl is automatically available in Play projects and can also be used
-stand-alone without any dependency on Play.
+```scala
+<ul>
+  @NonEmptyList.of(1, 2, 3).map { i => <li>@i</li> }
+</ul>
 
-See the Play [documentation for the template engine][docs] for more information
-about the template syntax.
+// what you intended to render
+<ul><li>1</li><li>2</li><li>3</li></ul>
+// what you actually get
+<ul>NonEmptyList(&lt;li&gt;1&lt;/li&gt;, &lt;li&gt;2&lt;/li&gt;, &lt;li&gt;3&lt;/li&gt;)</ul>
+```
 
-## sbt-twirl
+## sbt-typed-twirl
 
 Twirl can also be used outside of Play. An sbt plugin is provided for easy
 integration with Scala or Java projects.
 
-> sbt-twirl requires sbt 1.3.0 or higher.
+> sbt-typed-twirl requires sbt 1.3.0 or higher.
 
 To add the sbt plugin to your project add the sbt plugin dependency in
 `project/plugins.sbt`:
 
 ```scala
-// twirl 2.0 and newer:
-addSbtPlugin("org.playframework.twirl" % "sbt-twirl" % "LATEST_VERSION")
-// twirl 1.6:
-addSbtPlugin("com.typesafe.play" % "sbt-twirl" % "1.6.1")
-// twirl 1.5.1 and before:
-addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.5.1")
+resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main"
+addSbtPlugin("bondlink" % "sbt-typed-twirl" % "0.1.0")
 ```
-
-Replacing the `LATEST_VERSION` with the latest version published, which should be [![Latest version](https://index.scala-lang.org/playframework/twirl/twirl-api/latest.svg?color=orange)](https://index.scala-lang.org/playframework/twirl/twirl-api). And enable the plugin on projects using:
 
 ```scala
 someProject.enablePlugins(SbtTwirl)
@@ -89,10 +81,6 @@ sources alongside Scala or Java source files:
 ```scala
 Compile / TwirlKeys.compileTemplates / sourceDirectories := (Compile / unmanagedSourceDirectories).value
 ```
-
-## Releasing a new version
-
-See https://github.com/playframework/.github/blob/main/RELEASING.md
 
 ## Credits
 
