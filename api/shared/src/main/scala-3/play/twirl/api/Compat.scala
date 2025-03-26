@@ -15,7 +15,7 @@ private[api] trait Compat {
 }
 
 private[api] trait FormatValueInstancesCompat {
-  final implicit def iterableOnceFormatValue[T <: Appendable[T], F <: Format[T], V](implicit
+  final implicit def iterableOnceFormatValue[T, F <: Format[T], V](implicit
       vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, IterableOnce[V]] =
     FormatValue.instance((format: F, iterable: IterableOnce[V]) =>
@@ -27,7 +27,6 @@ private[api] trait FormatValueInstancesCompat {
       }
     )
 
-  final implicit def iterableOnceNothingFormatValue[T <: Appendable[T], F <: Format[T]]
-      : FormatValue[T, F, IterableOnce[Nothing]] =
+  final implicit def iterableOnceNothingFormatValue[T, F <: Format[T]]: FormatValue[T, F, IterableOnce[Nothing]] =
     FormatValue.instance((format: F, _: IterableOnce[Nothing]) => format.empty)
 }
