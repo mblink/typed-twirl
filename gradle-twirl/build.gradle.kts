@@ -27,7 +27,7 @@ val compilerVersion: String =
 
 val isRelease = !compilerVersion.endsWith("SNAPSHOT")
 
-group = "org.playframework.twirl"
+group = "bondlink"
 version = compilerVersion
 
 repositories {
@@ -36,7 +36,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.playframework.twirl:twirl-compiler_2.13:$compilerVersion")
+    compileOnly("bondlink:twirl-compiler_2.13:$compilerVersion")
     testImplementation(libs.assertj)
     testImplementation(libs.commons.io)
     testImplementation(libs.freemarker)
@@ -91,7 +91,7 @@ gradlePlugin {
     website.set("https://www.playframework.com/documentation/latest/ScalaTemplates")
     vcsUrl.set("https://github.com/playframework/twirl")
     val twirl by plugins.creating {
-        id = "org.playframework.twirl"
+        id = "bondlink"
         displayName = "Twirl Plugin"
         description = "A Gradle plugin to compile Twirl templates"
         tags.set(listOf("playframework", "web", "template", "java", "scala"))

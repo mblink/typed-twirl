@@ -25,7 +25,7 @@ class TwirlPluginTest {
   void init() {
     project = ProjectBuilder.builder().build();
     project.getPluginManager().apply("application");
-    project.getPluginManager().apply("org.playframework.twirl");
+    project.getPluginManager().apply("bondlink");
   }
 
   @Test
@@ -47,7 +47,7 @@ class TwirlPluginTest {
     assertThat(conf.getDependencies())
         .anyMatch(
             dependency ->
-                "org.playframework.twirl".equals(dependency.getGroup())
+                "bondlink".equals(dependency.getGroup())
                     && dependency.getName().startsWith("twirl-compiler"));
   }
 

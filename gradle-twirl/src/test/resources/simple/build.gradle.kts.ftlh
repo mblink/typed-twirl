@@ -1,6 +1,6 @@
 plugins {
   application
-  id("org.playframework.twirl")
+  id("bondlink")
 }
 
 repositories {
@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-  implementation("org.playframework.twirl:twirl-api_${scalaVersion}:${twirlVersion}")
+  implementation("bondlink:twirl-api_${scalaVersion}:${twirlVersion}")
 }
 
 twirl {

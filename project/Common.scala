@@ -58,11 +58,9 @@ object Common extends AutoPlugin {
 
   override def globalSettings =
     Seq(
-      organization         := "org.playframework.twirl",
-      organizationName     := "The Play Framework Project",
-      organizationHomepage := Some(url("https://playframework.com/")),
-      homepage             := Some(url(s"https://github.com/playframework/${repoName}")),
-      licenses             := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+      organization := "bondlink",
+      homepage     := Some(url(s"https://github.com/mblink/$repoName")),
+      licenses     := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
       developers += Developer(
         "playframework",
         "The Play Framework Contributors",

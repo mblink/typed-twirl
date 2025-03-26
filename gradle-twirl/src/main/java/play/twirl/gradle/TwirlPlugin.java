@@ -77,7 +77,7 @@ public class TwirlPlugin implements Plugin<Project> {
                   .getDependencies()
                   .create(
                       String.format(
-                          "org.playframework.twirl:twirl-compiler_%s:%s",
+                          "bondlink:twirl-compiler_%s:%s",
                           twirlExtension.getScalaVersion().get(), getDefaultTwirlVersion()));
           dependencies.add(twirlCompiler);
         });

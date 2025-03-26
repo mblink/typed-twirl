@@ -89,11 +89,7 @@ object SbtTwirl extends AutoPlugin {
           case Some(f) => f("").contains("_sjs1") // detect ScalaJS CrossVersion
           case None    => false
         }
-        // TODO: can we use %%% from sbt-crossproject now that we're on Scala.js 1.x?
-        val groupId = {
-          if (VersionNumber(twirlVersion.value).matchesSemVer(SemanticSelector(">=2.0.0-M1"))) "org.playframework.twirl"
-          else "com.typesafe.play"
-        }
+        val groupId      = "bondlink"
         val baseModuleID = groupId %% "twirl-api" % twirlVersion.value
         if (isScalaJS) baseModuleID.cross(crossVer) else baseModuleID
       }

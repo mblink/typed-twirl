@@ -16,7 +16,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.playframework.twirl</groupId>
+      <groupId>bondlink</groupId>
       <artifactId>twirl-api_${scala.binaryVersion}</artifactId>
       <version>${plugin.version}</version>
     </dependency>
@@ -37,7 +37,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.playframework.twirl</groupId>
+        <groupId>bondlink</groupId>
         <artifactId>twirl-maven-plugin_${scala.binaryVersion}</artifactId>
         <version>${plugin.version}</version>
         <configuration>

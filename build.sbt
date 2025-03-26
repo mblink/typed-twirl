@@ -19,50 +19,30 @@ def parserCombinators(scalaVersion: String) = "org.scala-lang.modules" %% "scala
 }
 
 lazy val commonSettings = Seq(
-  sonatypeProfileName := "org.playframework",
-  scalaVersion := Scala212,
+  scalaVersion       := Scala212,
   crossScalaVersions := ScalaVersions,
   scalacOptions ++= (scalaVersion.value match {
     case Scala213 => Seq("-Vimplicits", "-Vimplicits-verbose-tree")
-    case Scala3 => Seq("-explain")
+    case Scala3   => Seq("-explain")
     case Scala212 => Seq()
   }),
+  gitPublishDir := file("/src/maven-repo"),
 )
-
-val previousVersion: Option[String] = Some("2.0.1")
-
-val mimaSettings = Seq(
-  mimaPreviousArtifacts := previousVersion.map(organization.value %% moduleName.value % _).toSet,
-  mimaBinaryIssueFilters ++= Seq(
-  )
-)
-
-// Customise sbt-dynver's behaviour to make it work with tags which aren't v-prefixed
-ThisBuild / dynverVTagPrefix := false
-
-// Sanity-check: assert that version comes from a tag (e.g. not a too-shallow clone)
-// https://github.com/dwijnand/sbt-dynver/#sanity-checking-the-version
-Global / onLoad := (Global / onLoad).value.andThen { s =>
-  dynverAssertTagVersion.value
-  s
-}
 
 lazy val twirl = project
   .in(file("."))
-  .disablePlugins(MimaPlugin)
   .settings(
-    sonatypeProfileName := "org.playframework",
-    crossScalaVersions  := Nil, // workaround so + uses project-defined variants
-    publish / skip      := true,
+    crossScalaVersions := Nil, // workaround so + uses project-defined variants
+    publish / skip     := true,
+    gitRelease         := {},
     (Compile / headerSources) ++=
       ((baseDirectory.value ** ("*.properties" || "*.md" || "*.sbt" || "*.scala.html"))
         --- (baseDirectory.value ** "target" ** "*")
         --- (baseDirectory.value / "compiler" / "version.properties")
-        --- (baseDirectory.value ** "gradle-twirl" ** "*") // Gradle Spotless plugin is used
         --- (baseDirectory.value / "docs" ** "*")).get ++
         (baseDirectory.value / "project" ** "*.scala" --- (baseDirectory.value ** "target" ** "*")).get
   )
-  .aggregate(apiJvm, apiJs, parser, compiler, plugin, mavenPlugin)
+  .aggregate(apiJvm, apiJs, parser, compiler, plugin)
 
 lazy val nodeJs = {
   if (System.getProperty("NODE_PATH") != null)
@@ -77,7 +57,6 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
   .configs(Docs)
   .settings(commonSettings)
   .settings(
-    mimaSettings,
     name  := "twirl-api",
     jsEnv := nodeJs,
     // hack for GraalVM, see: https://github.com/scala-js/scala-js/issues/3673
@@ -90,9 +69,11 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
     ),
     libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "2.3.0",
     libraryDependencies += "org.scalatest"          %%% "scalatest" % ScalaTestVersion % Test,
-    libraryDependencies ++= (if (scalaVersion.value == Scala212) Seq(
-      "com.chuusai" %%% "shapeless" % "2.3.7"
-    ) else Seq())
+    libraryDependencies ++= (if (scalaVersion.value == Scala212)
+                               Seq(
+                                 "com.chuusai" %%% "shapeless" % "2.3.7"
+                               )
+                             else Seq())
   )
 
 lazy val apiJvm = api.jvm
@@ -103,7 +84,6 @@ lazy val parser = project
   .enablePlugins(Common, Omnidoc)
   .settings(commonSettings)
   .settings(
-    mimaSettings,
     name := "twirl-parser",
     libraryDependencies += parserCombinators(scalaVersion.value),
     libraryDependencies += "com.github.sbt"  % "junit-interface" % "0.13.3"         % Test,
@@ -115,7 +95,6 @@ lazy val compiler = project
   .enablePlugins(Common, Omnidoc, BuildInfoPlugin)
   .settings(commonSettings)
   .settings(
-    mimaSettings,
     name := "twirl-compiler",
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
@@ -144,8 +123,8 @@ lazy val plugin = project
   .settings(commonSettings)
   .settings(
     name                                    := "sbt-twirl",
-    organization                            := "org.playframework.twirl",
-    crossScalaVersions := Nil,
+    organization                            := "bondlink",
+    crossScalaVersions                      := Nil,
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
     crossScalaVersions += Scala3,
     pluginCrossBuild / sbtVersion := {
@@ -172,7 +151,6 @@ lazy val plugin = project
       }
       ()
     },
-    mimaFailOnNoPrevious := false
   )
 
 lazy val mavenPlugin = project
@@ -196,7 +174,6 @@ lazy val mavenPlugin = project
       .value,
     libraryDependencies += "org.codehaus.plexus" % "plexus-utils" % "4.0.2",
     Compile / headerSources ++= (baseDirectory.value / "src" / "maven-test" ** ("*.java" || "*.scala" || "*.scala.html") --- (baseDirectory.value ** "target" ** "*")).get,
-    mimaFailOnNoPrevious := false,
   )
 
 // Version file
