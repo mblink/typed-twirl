@@ -14,7 +14,7 @@ object Common extends AutoPlugin {
 
   override def requires = JvmPlugin
 
-  val repoName = "twirl"
+  val repoName = "typed-twirl"
 
   val javacParameters = Seq(
     "-encoding",

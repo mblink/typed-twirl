@@ -13,7 +13,7 @@ import scala.io.Codec
 
 object Import {
   object TwirlKeys {
-    val twirlVersion    = SettingKey[String]("twirl-version", "Twirl version used for twirl-api dependency")
+    val twirlVersion    = SettingKey[String]("twirl-version", "Twirl version used for typed-twirl-api dependency")
     val templateFormats = SettingKey[Map[String, String]]("twirl-template-formats", "Defined twirl template formats")
     val templateImports = SettingKey[Seq[String]]("twirl-template-imports", "Extra imports for twirl templates")
     val constructorAnnotations = SettingKey[Seq[String]](
@@ -48,7 +48,7 @@ object SbtTwirl extends AutoPlugin {
       compileTemplates / includeFilter       := "*.scala.*",
       compileTemplates / excludeFilter       := HiddenFileFilter,
       (compileTemplates / sourceDirectories) := Seq(sourceDirectory.value / "twirl"),
-      (Defaults.ConfigGlobal / watchSources) +=
+      (Defaults.ConfigZero / watchSources) +=
         WatchSource(
           (compileTemplates / sourceDirectory).value,
           (compileTemplates / includeFilter).value,
@@ -89,8 +89,7 @@ object SbtTwirl extends AutoPlugin {
           case Some(f) => f("").contains("_sjs1") // detect ScalaJS CrossVersion
           case None    => false
         }
-        val groupId      = "bondlink"
-        val baseModuleID = groupId %% "twirl-api" % twirlVersion.value
+        val baseModuleID = "bondlink" %% "typed-twirl-api" % twirlVersion.value
         if (isScalaJS) baseModuleID.cross(crossVer) else baseModuleID
       }
     )

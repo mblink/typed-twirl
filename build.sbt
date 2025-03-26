@@ -22,9 +22,9 @@ lazy val commonSettings = Seq(
   scalaVersion       := Scala212,
   crossScalaVersions := ScalaVersions,
   scalacOptions ++= (scalaVersion.value match {
-    case Scala213 => Seq("-Vimplicits", "-Vimplicits-verbose-tree")
-    case Scala3   => Seq("-explain")
-    case Scala212 => Seq()
+    case Scala213          => Seq("-Vimplicits", "-Vimplicits-verbose-tree")
+    case Scala33 | Scala36 => Seq("-explain")
+    case Scala212          => Seq()
   }),
   gitPublishDir := file("/src/maven-repo"),
 )
@@ -55,7 +55,7 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
   .enablePlugins(Common)
   .settings(commonSettings)
   .settings(
-    name  := "twirl-api",
+    name  := "typed-twirl-api",
     jsEnv := nodeJs,
     // hack for GraalVM, see: https://github.com/scala-js/scala-js/issues/3673
     // and https://github.com/playframework/twirl/pull/339
@@ -82,7 +82,7 @@ lazy val parser = project
   .enablePlugins(Common)
   .settings(commonSettings)
   .settings(
-    name := "twirl-parser",
+    name := "typed-twirl-parser",
     libraryDependencies += parserCombinators(scalaVersion.value),
     libraryDependencies += "com.github.sbt"  % "junit-interface" % "0.13.3"         % Test,
     libraryDependencies += "org.scalatest" %%% "scalatest"       % ScalaTestVersion % Test,
@@ -93,7 +93,7 @@ lazy val compiler = project
   .enablePlugins(Common, BuildInfoPlugin)
   .settings(commonSettings)
   .settings(
-    name := "twirl-compiler",
+    name := "typed-twirl-compiler",
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) =>
@@ -119,16 +119,16 @@ lazy val plugin = project
   .dependsOn(compiler)
   .settings(commonSettings)
   .settings(
-    name                                    := "sbt-twirl",
+    name                                    := "sbt-typed-twirl",
     organization                            := "bondlink",
-    crossScalaVersions                      := Seq(Scala212, Scala3),
+    crossScalaVersions                      := Seq(Scala212, Scala36),
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
     pluginCrossBuild / sbtVersion := {
       scalaBinaryVersion.value match {
         case "2.12" =>
           sbtVersion.value
         case _ =>
-          "2.0.0-M2"
+          "2.0.0-M4"
       }
     },
     Compile / resourceGenerators += generateVersionFile.taskValue,
