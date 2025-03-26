@@ -1,5 +1,5 @@
 /*
- * Copyright (C) from 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) from 2025 BondLink, 2022 The Play Framework Contributors <https://github.com/playframework>, 2011-2021 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package play.twirl.compiler
@@ -175,7 +175,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       the[CompilationError] thrownBy helper.compile[(() => Html)]("error.scala.html", "html.error") must have(
         Symbol("line")(5),
 //        Symbol("column")(12) TODO: need fix https://github.com/playframework/twirl/issues/571 to back
-        Symbol("column")(463)
+        Symbol("column")(508)
       )
     }
 
@@ -185,7 +185,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
         .compile[(() => Html)]("errorInTemplateArgs.scala.html", "html.errorInTemplateArgs") must have(
         Symbol("line")(5),
 //        Symbol("column")(6) TODO: need fix https://github.com/playframework/twirl/issues/571 to back
-        Symbol("column")(458)
+        Symbol("column")(503)
       )
     }
 
