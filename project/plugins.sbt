@@ -10,5 +10,5 @@ addSbtPlugin("com.lightbend.sbt" % "sbt-java-formatter" % "0.8.0")
 addSbtPlugin("ch.epfl.scala"     % "sbt-bloop"          % "2.0.8")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo"      % "0.13.1")
 
-resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main"
+resolvers += "bondlink-maven-repo".at("https://raw.githubusercontent.com/mblink/maven-repo/main")
 addSbtPlugin("bondlink" % "sbt-git-publish" % "0.0.5")
