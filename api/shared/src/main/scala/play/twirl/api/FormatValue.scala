@@ -9,23 +9,18 @@ import java.util.Optional
 import scala.collection.immutable
 import scala.language.implicitConversions
 
-trait FormatValue[T <: Appendable[T], F <: Format[T], -V] { self =>
+sealed trait FormatValue[T <: Appendable[T], F <: Format[T], -V] { self =>
   def apply(format: F, value: V): T
 
   final def contramap[B](f: B => V): FormatValue[T, F, B] =
-    new FormatValue[T, F, B] {
-      def apply(format: F, value: B): T = self(format, f(value))
-    }
+    FormatValue.instance((format: F, value: B) => self(format, f(value)))
 }
 
 object FormatValue extends FormatValueInstances0 {
   class Companion[T <: Appendable[T], F <: Format[T]] {
     @inline final def apply[V](implicit f: FormatValue[T, F, V]): FormatValue[T, F, V] = f
 
-    final def instance[V](f: (F, V) => T): FormatValue[T, F, V] =
-      new FormatValue[T, F, V] {
-        def apply(format: F, value: V): T = f(format, value)
-      }
+    final def instance[V](f: (F, V) => T): FormatValue[T, F, V] = FormatValue.instance(f)
   }
 
   @inline final def apply[T <: Appendable[T], F <: Format[T], V](implicit
@@ -34,7 +29,11 @@ object FormatValue extends FormatValueInstances0 {
 
   def instance[T <: Appendable[T], F <: Format[T], V](f: (F, V) => T): FormatValue[T, F, V] =
     new FormatValue[T, F, V] {
-      def apply(format: F, value: V): T = f(format, value)
+      def apply(format: F, value: V): T =
+        value match {
+          case null => format.empty
+          case _    => f(format, value)
+        }
     }
 
   final case class Formatted[T <: Appendable[T], F <: Format[T]](formatted: T) extends AnyVal

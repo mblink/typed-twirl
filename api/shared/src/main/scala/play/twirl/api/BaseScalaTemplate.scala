@@ -5,7 +5,7 @@
 package play.twirl.api
 
 sealed abstract class BaseScalaTemplateLP[T <: Appendable[T], F <: Format[T]](format: F) {
-  def _display_[V](v: V)(implicit formatValue: FormatValue[T, F, V]): T = formatValue(format, v)
+  final def _display_[V](v: V)(implicit formatValue: FormatValue[T, F, V]): T = formatValue(format, v)
 }
 
 case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]](format: F) extends BaseScalaTemplateLP[T, F](format) {
