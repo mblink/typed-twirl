@@ -41,8 +41,6 @@ lazy val nodeJs = {
     new NodeJSEnv()
 }
 
-def scalaReflect(scalaV: String) = "org.scala-lang" % "scala-reflect" % scalaV % "provided"
-
 lazy val api = crossProject(JVMPlatform, JSPlatform)
   .in(file("api"))
   .enablePlugins(Common)
@@ -61,9 +59,8 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
       "org.scala-lang.modules" %%% "scala-xml" % "2.3.0",
       "org.scalatest"          %%% "scalatest" % ScalaTestVersion % Test,
     ) ++ (scalaVersion.value match {
-      case v @ Scala212 => Seq(scalaReflect(v), "com.chuusai" %%% "shapeless" % "2.3.13")
-      case v @ Scala213 => Seq(scalaReflect(v))
-      case Scala33      => Seq()
+      case v @ (Scala212 | Scala213) => Seq("org.scala-lang" % "scala-reflect" % v % "provided")
+      case Scala33                   => Seq()
     })
   )
 
