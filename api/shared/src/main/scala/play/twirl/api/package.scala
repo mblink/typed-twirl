@@ -4,7 +4,7 @@
 
 package play.twirl
 
-package object api extends Compat with StringInterpolationCompat {
+package object api extends StringInterpolationCompat {
   type FormatHtml[-V] = FormatValue[Html, HtmlFormat.type, V]
   object FormatHtml extends FormatValue.Companion[Html, HtmlFormat.type]
 

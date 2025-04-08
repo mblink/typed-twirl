@@ -6,6 +6,7 @@ package play.twirl.api
 
 import java.util.{ List => JList }
 import java.util.Optional
+import scala.collection.JavaConverters._
 
 sealed trait FormatValue[T, F <: Format[T], -V] { self =>
   def apply(format: F, value: V): T
@@ -115,9 +116,7 @@ sealed trait FormatValueInstances1 extends FormatValueInstancesCompat {
   final implicit def javaListFormatValue[T, F <: Format[T], V](implicit
       vFormatValue: FormatValue[T, F, V]
   ): FormatValue[T, F, JList[V]] =
-    FormatValue.instance((format: F, list: JList[V]) =>
-      format.fill(javaListToScala(list).map(vFormatValue(format, _)).toList)
-    )
+    FormatValue.instance((format: F, list: JList[V]) => format.fill(list.asScala.map(vFormatValue(format, _)).toList))
 
   final implicit def optionalFormatValue[T, F <: Format[T], V](implicit
       optionVFormatValue: FormatValue[T, F, Option[V]]

@@ -5,14 +5,6 @@
 package play.twirl.api
 
 import scala.collection.immutable
-import scala.jdk.CollectionConverters._
-
-private[api] trait Compat {
-  final def javaListToScala[A](l: java.util.List[A]): scala.collection.mutable.Buffer[A] = l.asScala
-
-  final def checkStringContextLengths(sc: StringContext, args: scala.collection.Seq[Any]): Unit =
-    StringContext.checkLengths(args, sc.parts)
-}
 
 private[api] trait FormatValueInstancesCompat {
   final implicit def iterableOnceFormatValue[T, F <: Format[T], V](implicit
