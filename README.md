@@ -34,7 +34,7 @@ To add the sbt plugin to your project add the sbt plugin dependency in
 
 ```scala
 resolvers += "bondlink-maven-repo" at "https://raw.githubusercontent.com/mblink/maven-repo/main"
-addSbtPlugin("bondlink" % "sbt-typed-twirl" % "0.1.0")
+addSbtPlugin("bondlink" % "sbt-typed-twirl" % "0.3.0")
 ```
 
 ```scala
