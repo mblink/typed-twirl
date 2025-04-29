@@ -4,6 +4,7 @@
 addSbtPlugin("org.scala-js"       % "sbt-scalajs"              % "1.18.2")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.3.2")
 
+addSbtPlugin("com.frugalmechanic" % "fm-sbt-s3-resolver" % "0.23.0")
 addSbtPlugin("de.heikoseeberger" % "sbt-header"         % "5.10.0")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"       % "2.5.4")
 addSbtPlugin("com.lightbend.sbt" % "sbt-java-formatter" % "0.8.0")

@@ -18,7 +18,7 @@ def parserCombinators(scalaVersion: String) = "org.scala-lang.modules" %% "scala
   }
 }
 
-ThisBuild / publishTo := Some("GitHub Package Registry".at("https://maven.pkg.github.com/mblink/typed-twirl"))
+ThisBuild / publishTo := Some("BondLink S3".at("s3://bondlink-maven-repo"))
 
 lazy val twirl = project
   .in(file("."))
