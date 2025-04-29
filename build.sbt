@@ -18,14 +18,13 @@ def parserCombinators(scalaVersion: String) = "org.scala-lang.modules" %% "scala
   }
 }
 
-ThisBuild / gitPublishDir := file("/src/maven-repo")
+ThisBuild / publishTo := Some("GitHub Package Registry".at("https://maven.pkg.github.com/mblink/typed-twirl"))
 
 lazy val twirl = project
   .in(file("."))
   .settings(
     crossScalaVersions := Nil, // workaround so + uses project-defined variants
     publish / skip     := true,
-    gitRelease         := {},
     (Compile / headerSources) ++=
       ((baseDirectory.value ** ("*.properties" || "*.md" || "*.sbt" || "*.scala.html"))
         --- (baseDirectory.value ** "target" ** "*")
