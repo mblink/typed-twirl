@@ -49,7 +49,7 @@ object Helper {
       def inject(constructorArgs: Any*): T = {
         classloader.loadClass(className).getConstructors match {
           case Array(single) => getF(single.newInstance(constructorArgs.asInstanceOf[Seq[AnyRef]]*))
-          case other =>
+          case other         =>
             throw new IllegalStateException(className + " does not declare exactly one constructor: " + other)
         }
       }
@@ -60,8 +60,8 @@ object Helper {
         className: String,
         additionalImports: Seq[String] = Nil
     ): CompiledTemplate[T] = {
-      val scalaVersion = play.twirl.compiler.BuildInfo.scalaVersion
-      val templateFile = new File(sourceDir, templateName)
+      val scalaVersion               = play.twirl.compiler.BuildInfo.scalaVersion
+      val templateFile               = new File(sourceDir, templateName)
       val generatedOpt: Option[File] = twirlCompiler.compile(
         templateFile,
         sourceDir,
@@ -104,7 +104,7 @@ object Helper {
 
     class TestDriver(outDir: Path, compilerArgs: Array[String], path: Path) extends Driver {
       def compile(): Reporter = {
-        val setupOpt = setup(compilerArgs :+ path.toAbsolutePath.toString, initCtx.fresh)
+        val setupOpt             = setup(compilerArgs :+ path.toAbsolutePath.toString, initCtx.fresh)
         val (toCompile, rootCtx) = setupOpt.getOrElse {
           throw new Exception("Failed to initialize compiler")
         }

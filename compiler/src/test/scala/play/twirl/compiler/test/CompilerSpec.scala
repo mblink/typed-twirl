@@ -34,7 +34,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
   testName should {
     "compile successfully (real)" in {
       val helper = newCompilerHelper
-      val tmpl = helper
+      val tmpl   = helper
         .compile[((String, List[String]) => (Int) => Html)]("real.scala.html", "html.real")
         .static("World", List("A", "B"))(4)
         .toString
@@ -77,7 +77,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
     "compile successfully (helloNull)" in {
       val helper = newCompilerHelper
-      val hello =
+      val hello  =
         helper.compile[((String) => Html)]("helloNull.scala.html", "html.helloNull").static(null).toString.trim
       hello must be("<h1>Hello !</h1>")
     }
@@ -95,7 +95,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
     "compile successfully (set)" in {
       val helper = newCompilerHelper
-      val set = helper
+      val set    = helper
         .compile[((collection.immutable.Set[String]) => Html)]("set.scala.html", "html.set")
         .static(Set("first", "second", "third"))
         .toString
@@ -146,7 +146,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
     "compile successfully (var args existential)" in {
       val helper = newCompilerHelper
-      val text = helper
+      val text   = helper
         .compile[(Array[List[?]] => Html)]("varArgsExistential.scala.html", "html.varArgsExistential")
         .static(Array(List(1, 2, 3), List(4, 5, 6)))
         .toString
@@ -160,9 +160,28 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       text must be("123456")
     }
 
+    "compile successfully (using)" in {
+
+      assume(BuildInfo.scalaVersion.startsWith("3."), "This test is only supposed to run with scala3")
+      val helper = newCompilerHelper
+
+      val text = helper
+        .compile[(String => String => Html)]("using.scala.html", "html.using")
+        .static("the using modifier")("should compile 😤")
+        .toString
+        .trim
+
+      val compat        = ScalaCompat(Option(BuildInfo.scalaVersion))
+      val generatedFile = helper.generatedDir.toPath.resolve("html/using.template.scala").toFile
+      val generatedText = Source.fromFile(generatedFile).getLines().mkString("\n")
+
+      generatedText must include(s"apply(x)(${compat.usingSyntax}y)")
+      text must be("the using modifier should compile 😤")
+    }
+
     "compile successfully (call by name)" in {
       val helper = newCompilerHelper
-      val text = helper
+      val text   = helper
         .compile[((=> String) => Html)]("callByName.scala.html", "html.callByName")
         .static("World")
         .toString
@@ -191,7 +210,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
     "compile templates that have contiguous strings > than 64k" in {
       val helper = newCompilerHelper
-      val input = TwirlIO
+      val input  = TwirlIO
         .readFileAsString(new File(sourceDir, "long.scala.html"))
         .replaceAll("(?s)@\\*(.*)\\*@(\n)*", "") // drop block comments
       val result = helper.compile[(() => Html)]("long.scala.html", "html.long").static().toString
@@ -201,7 +220,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
     "allow rendering a template twice" in {
       val helper = newCompilerHelper
-      val inner = helper
+      val inner  = helper
         .compile[((String, List[String]) => (Int) => Html)]("htmlInner.scala.html", "html.htmlInner")
         .static("World", List("A", "B"))(4)
 
@@ -225,7 +244,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       }
 
       "with parameter groups" in {
-        val helper = newCompilerHelper
+        val helper   = newCompilerHelper
         val template = helper
           .compile[String => Html]("injectParamGroups.scala.html", "html.injectParamGroups")
           .inject("Hello", 10, "my")
@@ -233,7 +252,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
       }
 
       "with comments" in {
-        val helper = newCompilerHelper
+        val helper   = newCompilerHelper
         val template =
           helper.compile[String => Html]("injectComments.scala.html", "html.injectComments").inject("Hello", 10)
         template("world").body.trim mustBe "Hello 10 world"
@@ -292,7 +311,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
   "compile successfully (complex if without brackets)" in {
     val helper = newCompilerHelper
-    val hello =
+    val hello  =
       helper.compile[((String, String) => Html)]("ifWithoutBracketsComplex.scala.html", "html.ifWithoutBracketsComplex")
     hello.static("twirl", "play").toString.trim must include("""<header class="play-twirl">""")
     hello.static("twirl", "something-else").toString.trim must include("""<header class="twirl">""")
@@ -300,7 +319,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
   "compile successfully (local definitions)" in {
     val helper = newCompilerHelper
-    val hello =
+    val hello  =
       helper.compile[(() => Html)]("localDef.scala.html", "html.localDef")
     hello.static().toString.trim must be(
       "Play-Framework-Vienna-Austria-Europe-The High Velocity Web Framework For Java and Scala-2023"
@@ -319,7 +338,7 @@ class CompilerSpec extends AnyWordSpec with Matchers {
 
   "compile successfully (block with nested tuples)" in {
     val helper = newCompilerHelper
-    val hello =
+    val hello  =
       helper.compile[(Seq[(String, String)] => Html)]("blockWithNestedTuple.scala.html", "html.blockWithNestedTuple")
 
     val args = Seq[(String, String)](
