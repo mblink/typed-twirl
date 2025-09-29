@@ -55,7 +55,7 @@ lazy val api = crossProject(JVMPlatform, JSPlatform)
       )
     ),
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %%% "scala-xml" % "2.3.0",
+      "org.scala-lang.modules" %%% "scala-xml" % "2.4.0",
       "org.scalatest"          %%% "scalatest" % ScalaTestVersion % Test,
     ) ++ (scalaVersion.value match {
       case v @ (Scala212 | Scala213) => Seq("org.scala-lang" % "scala-reflect" % v % "provided")
@@ -90,7 +90,7 @@ lazy val compiler = project
       }
     },
     libraryDependencies += parserCombinators(scalaVersion.value),
-    libraryDependencies += "org.scalameta" %% "parsers" % "4.13.4",
+    libraryDependencies += "org.scalameta" %% "parsers" % "4.13.9",
     run / fork                             := true,
     buildInfoKeys                          := Seq[BuildInfoKey](scalaVersion),
     buildInfoPackage                       := "play.twirl.compiler",
@@ -108,14 +108,14 @@ lazy val plugin = project
     name                                    := "sbt-typed-twirl",
     organization                            := "bondlink",
     scalaVersion                            := Scala212,
-    crossScalaVersions                      := Seq(Scala212, Scala36),
+    crossScalaVersions                      := Seq(Scala212, Scala37),
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
-    pluginCrossBuild / sbtVersion := {
+    pluginCrossBuild / sbtVersion           := {
       scalaBinaryVersion.value match {
         case "2.12" =>
           sbtVersion.value
         case _ =>
-          "2.0.0-M4"
+          "2.0.0-RC6"
       }
     },
     Compile / resourceGenerators += generateVersionFile.taskValue,

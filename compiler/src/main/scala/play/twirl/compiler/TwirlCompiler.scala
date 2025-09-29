@@ -7,6 +7,7 @@ package play.twirl.compiler
 import java.io.File
 import scala.annotation.tailrec
 import scala.io.Codec
+import scala.meta.classifiers._
 import play.twirl.parser.TwirlIO
 import play.twirl.parser.TwirlParser
 import scala.util.parsing.input.Position
@@ -90,7 +91,7 @@ sealed trait AbstractGeneratedSource {
 
   def mapPosition(generatedPosition: Int): Int = {
     matrix.indexWhere(p => p._1 > generatedPosition) match {
-      case 0 => 0
+      case 0          => 0
       case i if i > 0 => {
         val pos = matrix(i - 1)
         pos._2 + (generatedPosition - pos._1)
@@ -104,7 +105,7 @@ sealed trait AbstractGeneratedSource {
 
   def mapLine(generatedLine: Int): Int = {
     lines.indexWhere(p => p._1 > generatedLine) match {
-      case 0 => 0
+      case 0          => 0
       case i if i > 0 => {
         val line = lines(i - 1)
         line._2 + (generatedLine - line._1)
@@ -153,7 +154,7 @@ case class GeneratedSource(file: File, codec: Codec = TwirlIO.defaultCodec) exte
 }
 
 case class GeneratedSourceVirtual(path: String) extends AbstractGeneratedSource {
-  var _content = ""
+  var _content                             = ""
   def setContent(newContent: String): Unit = {
     this._content = newContent
   }
@@ -163,11 +164,13 @@ case class GeneratedSourceVirtual(path: String) extends AbstractGeneratedSource 
 object TwirlCompiler {
 
   // For constants that depend on Scala 2 or 3 mode.
-  private[compiler] class ScalaCompat(emitScala3Sources: Boolean) {
+  private[compiler] class ScalaCompat(val emitScala3Sources: Boolean) {
     val varargSplicesSyntax: String =
       if (emitScala3Sources) "*" else ": _*"
     def valueOrEmptyIfScala3Exceeding22Params(params: Int, value: => String): String =
       if (emitScala3Sources && params > 22) "" else value
+    val usingSyntax: String =
+      if (emitScala3Sources) "using " else ""
   }
 
   private[compiler] object ScalaCompat {
@@ -236,7 +239,7 @@ object TwirlCompiler {
       codec: Codec,
       inclusiveDot: Boolean
   ): Option[File] = {
-    val resultType = formatterType + ".Appendable"
+    val resultType                      = formatterType + ".Appendable"
     val (templateName, generatedSource) =
       generatedFile(source, codec, sourceDirectory, generatedDirectory, inclusiveDot)
     if (generatedSource.needRecompilation(additionalImports)) {
@@ -297,7 +300,7 @@ object TwirlCompiler {
   ): GeneratedSourceVirtual = {
 
     val (templateName, generatedSource) = generatedFileVirtual(source, sourceDirectory, inclusiveDot)
-    val generated = parseAndGenerateCode(
+    val generated                       = parseAndGenerateCode(
       templateName,
       content.getBytes(codec.charSet),
       codec,
@@ -462,7 +465,7 @@ object TwirlCompiler {
   // We need to double escape slashes, since it's a regex replacement
   private val escapedTripleQuote       = "\\\"" * 3
   private val doubleEscapedTripleQuote = "\\\\\"" * 3
-  private val tripleQuoteReplacement =
+  private val tripleQuoteReplacement   =
     escapedTripleQuote + " + \\\"" + doubleEscapedTripleQuote + "\\\" + " + escapedTripleQuote
   private def quoteAndEscape(text: String): collection.Seq[String] = {
     Seq(tripleQuote, text.replaceAll(tripleQuote, tripleQuoteReplacement), tripleQuote)
@@ -691,7 +694,7 @@ package """ :+ packageName :+ """
 
       val params: List[List[Term.Param]] =
         try {
-          val dialect = Dialect.current
+          val dialect = Dialect.current.withAllowGivenUsing(true)
           val input   = Input.String(s"object FT { def signature$signature }")
           val obj     = implicitly[Parse[Stat]].apply(input, dialect).get.asInstanceOf[Defn.Object]
           val templ   = obj.templ
@@ -715,6 +718,27 @@ package """ :+ packageName :+ """
         )
         .mkString(" => ") + " => " + returnType + ")"
 
+      val hasContextParameters =
+        params.flatten.exists(_.mods.exists(modifier => modifier.is[Mod.Implicit] || modifier.is[Mod.Using]))
+
+      val applyArgs = {
+        params.map { group =>
+          val groupStr = "(" + group
+            .map { p =>
+              p.name.toString + Option(p.decltpe.get.toString)
+                .filter(_.endsWith("*"))
+                .map(_ => s".toIndexedSeq${sc.varargSplicesSyntax}")
+                .getOrElse("")
+            }
+            .mkString(",") + ")"
+
+          // prepend "using" for Scala 3 context parameters on the last param
+          if (sc.emitScala3Sources && hasContextParameters && group == params.last)
+            groupStr.replace("(", s"(${sc.usingSyntax}")
+          else groupStr
+        }.mkString
+      }
+
       val renderCall = "def render%s: %s = apply%s".format(
         "(" + params.flatten
           .map {
@@ -723,18 +747,13 @@ package """ :+ packageName :+ """
           }
           .mkString(",") + ")",
         returnType,
-        params
-          .map(group =>
-            "(" + group
-              .map { p =>
-                p.name.toString + Option(p.decltpe.get.toString)
-                  .filter(_.endsWith("*"))
-                  .map(_ => s".toIndexedSeq${sc.varargSplicesSyntax}")
-                  .getOrElse("")
-              }
-              .mkString(",") + ")"
-          )
-          .mkString
+        applyArgs
+      )
+
+      val f = "def f:%s = %s => apply%s".format(
+        functionType,
+        params.map(group => "(" + group.map(_.name.toString).mkString(",") + ")").mkString(" => "),
+        applyArgs
       )
 
       val templateType = sc.valueOrEmptyIfScala3Exceeding22Params(
@@ -749,23 +768,6 @@ package """ :+ packageName :+ """
             .mkString(","),
           (if (params.flatten.isEmpty) "" else ",") + returnType
         )
-      )
-
-      val f = "def f:%s = %s => apply%s".format(
-        functionType,
-        params.map(group => "(" + group.map(_.name.toString).mkString(",") + ")").mkString(" => "),
-        params
-          .map(group =>
-            "(" + group
-              .map { p =>
-                p.name.toString + Option(p.decltpe.get.toString)
-                  .filter(_.endsWith("*"))
-                  .map(_ => s".toIndexedSeq${sc.varargSplicesSyntax}")
-                  .getOrElse("")
-              }
-              .mkString(",") + ")"
-          )
-          .mkString
       )
 
       (renderCall, f, templateType)
@@ -810,7 +812,7 @@ object Source {
       lines: ListBuffer[(Int, Int)]
   ): Unit = {
     parts.foreach {
-      case s: String => source.append(s)
+      case s: String                                     => source.append(s)
       case Source(code, pos @ OffsetPosition(_, offset)) => {
         source.append("/*" + pos + "*/")
         positions += (source.length                -> offset)

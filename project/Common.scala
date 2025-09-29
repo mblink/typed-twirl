@@ -27,6 +27,7 @@ object Common extends AutoPlugin {
   )
 
   val scalacParameters = Seq(
+    "-release:17",
     "-deprecation",
     "-feature",
     "-unchecked",
@@ -38,11 +39,7 @@ object Common extends AutoPlugin {
     CrossVersion.partialVersion(version) match {
       case Some((2, _)) =>
         scalacParameters ++ Seq(
-          "-release:17",
-          "-Ywarn-unused:imports",
-          "-Xlint:nullary-unit",
-          "-Xlint",
-          "-Ywarn-dead-code"
+          "-Xsource:3"
         )
       case Some((3, _)) =>
         scalacParameters
