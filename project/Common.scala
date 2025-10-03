@@ -56,7 +56,7 @@ object Common extends AutoPlugin {
 
   override def globalSettings =
     Seq(
-      version      := "0.3.3-SNAPSHOT",
+      version      := "0.3.3",
       organization := "bondlink",
       homepage     := Some(url(s"https://github.com/mblink/$repoName")),
       licenses     := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
