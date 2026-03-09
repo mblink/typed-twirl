@@ -71,22 +71,24 @@ sealed trait AbstractGeneratedSource {
     for {
       pos <- meta("MATRIX").split('|').toIndexedSeq
       c = pos.split("->")
-    } yield try {
-      Integer.parseInt(c(0)) -> Integer.parseInt(c(1))
-    } catch {
-      case _: Exception => (0, 0) // Skip if MATRIX meta is corrupted
-    }
+    } yield
+      try {
+        Integer.parseInt(c(0)) -> Integer.parseInt(c(1))
+      } catch {
+        case _: Exception => (0, 0) // Skip if MATRIX meta is corrupted
+      }
   }
 
   lazy val lines: Seq[(Int, Int)] = {
     for {
       pos <- meta("LINES").split('|').toIndexedSeq
       c = pos.split("->")
-    } yield try {
-      Integer.parseInt(c(0)) -> Integer.parseInt(c(1))
-    } catch {
-      case _: Exception => (0, 0) // Skip if LINES meta is corrupted
-    }
+    } yield
+      try {
+        Integer.parseInt(c(0)) -> Integer.parseInt(c(1))
+      } catch {
+        case _: Exception => (0, 0) // Skip if LINES meta is corrupted
+      }
   }
 
   def mapPosition(generatedPosition: Int): Int = {
@@ -471,7 +473,11 @@ object TwirlCompiler {
     Seq(tripleQuote, text.replaceAll(tripleQuote, tripleQuoteReplacement), tripleQuote)
   }
 
-  def visit(elem: collection.Seq[TemplateTree], previous: collection.Seq[Any]): collection.Seq[Any] = {
+  def visit(
+      elem: collection.Seq[TemplateTree],
+      previous: collection.Seq[Any],
+      resultType: Option[String]
+  ): collection.Seq[Any] = {
     elem.toList match {
       case head :: tail =>
         visit(
@@ -483,42 +489,66 @@ object TwirlCompiler {
               // over 20000 characters. 20000 characters is a nice round number, use that.
               val grouped = StringGrouper(text, 20000)
               (if (previous.isEmpty) Nil else previous :+ ",") :+
-                "format.raw" :+ Source("(", p.pos) :+ quoteAndEscape(grouped.head) :+ ")" :+
-                grouped.tail.flatMap { t => Seq(",\nformat.raw(", quoteAndEscape(t), ")") }
+                "$twirl__format.raw" :+ Source("(", p.pos) :+ quoteAndEscape(grouped.head) :+ ")" :+
+                grouped.tail.flatMap { t => Seq(",\n$twirl__format.raw(", quoteAndEscape(t), ")") }
             case Comment(msg) => previous
             case Display(exp) =>
-              (if (previous.isEmpty) Nil else previous :+ ",") :+ displayVisitedChildren(visit(Seq(exp), Nil))
+              (if (previous.isEmpty) Nil else previous :+ ",") :+ displayVisitedChildren(
+                visit(Seq(exp), Nil, resultType)
+              )
             case ScalaExp(parts) =>
               previous :+ parts.map {
                 case s @ Simple(code) => Source(code, s.pos)
-                case b @ Block(whitespace, args, content) if content.forall(_.isInstanceOf[ScalaExp]) =>
-                  Nil :+ Source(whitespace + "{" + args.getOrElse(""), b.pos) :+ visit(content, Nil) :+ "}"
-                case b @ Block(whitespace, args, content) =>
+                case b @ Block(whitespace, args, contents) if contents.content.forall(_.isInstanceOf[ScalaExp]) =>
+                  Nil :+ Source(whitespace + "{" + args.getOrElse(""), b.pos) :+ visit(
+                    contents.content,
+                    Nil,
+                    resultType
+                  ) :+ "}"
+                case b @ Block(whitespace, args, contents) if !contents.rich() =>
                   Nil :+ Source(whitespace + "{" + args.getOrElse(""), b.pos) :+ displayVisitedChildren(
-                    visit(content, Nil)
+                    visit(contents.content, Nil, resultType)
+                  ) :+ "}"
+                case b @ Block(whitespace, args, contents) if contents.rich() =>
+                  Nil :+ Source(whitespace + "{" + args.getOrElse(""), b.pos) :+ templateCode(
+                    contents,
+                    resultType
                   ) :+ "}"
               }
-          }
+            case Reassignment(Left(template)) => {
+              (if (previous.isEmpty) Nil else previous :+ ",") :+ Source(
+                "{" + template.name + " = _display_{",
+                template.pos
+              ) :+ templateCode(template, None) :+ Source("}}", template.pos)
+            }
+            case Reassignment(Right(variable)) => {
+              (if (previous.isEmpty) Nil else previous :+ ",") :+ Source(
+                "{" + variable.name + " = " + variable.code.code + "}",
+                variable.pos
+              )
+            }
+          },
+          resultType
         )
       case Nil => previous
     }
   }
 
-  def templateCode(template: Template, resultType: String): collection.Seq[Any] = {
-    val tpls = template.sub.map(t =>
-      if (t.name.toString == "") templateCode(t, resultType)
-      else {
-        Nil :+ (if (t.name.str.startsWith("implicit")) "implicit def " else "def ") :+ Source(
+  def templateCode(template: BaseTemplate, resultType: Option[String]): collection.Seq[Any] = {
+    val defs = (template.sub ++ template.members).sortWith((l, r) => l.pos.<(r.pos)).map {
+      case t: SubTemplate if t.name.toString == "" => templateCode(t, resultType)
+      case t: SubTemplate                          => {
+        Nil :+ (if (t.name.str.startsWith("implicit")) "implicit " else "") :+ t.declaration.fold(
+          isVar => if (isVar) "var " else "def ",
+          valIsLazy => if (valIsLazy) "lazy val " else "val "
+        ) :+ Source(
           t.name.str,
           t.name.pos
         ) :+ Source(
           t.params.str,
           t.params.pos
-        ) :+ ":" :+ resultType :+ " = {_display_(" :+ templateCode(t, resultType) :+ ")};"
+        ) :+ resultType.map(rt => ":" :+ rt).getOrElse(Nil) :+ " = {_display_{" :+ templateCode(t, resultType) :+ "}};"
       }
-    )
-
-    val defs = template.defs.map {
       case Def(name, params, resultType, block) => {
         Nil :+ (if (name.str.startsWith("implicit")) "implicit def " else "def ") :+ Source(
           name.str,
@@ -528,11 +558,24 @@ object TwirlCompiler {
           params.pos
         ) :+ resultType.map(":" + _.str).getOrElse("") :+ " = {" :+ block.code :+ "};"
       }
+      case Val(name, isLazy, resultType, block) => {
+        Nil :+ (if (name.str.startsWith("implicit")) "implicit " else "") :+ (if (isLazy) "lazy "
+                                                                              else "") :+ "val " :+ Source(
+          name.str,
+          name.pos
+        ) :+ resultType.map(":" + _.str).getOrElse("") :+ " = {" :+ block.code :+ "};"
+      }
+      case Var(name, resultType, block) => {
+        Nil :+ (if (name.str.startsWith("implicit")) "implicit var " else "var ") :+ Source(
+          name.str,
+          name.pos
+        ) :+ resultType.map(":" + _.str).getOrElse("") :+ " = {" :+ block.code :+ "};"
+      }
     }
 
     val imports = formatImports(template.imports)
 
-    Nil :+ imports :+ "\n" :+ (tpls ++ defs) :+ "\n" :+ "Seq(" :+ visit(template.content, Nil) :+ ")"
+    Nil :+ imports :+ "\n" :+ defs :+ "\n" :+ "Seq(" :+ visit(template.content, Nil, resultType) :+ ")"
   }
 
   def generateCode(
@@ -589,7 +632,7 @@ package """ :+ packageName :+ """
   def apply""" :+ Source(root.params.str, root.params.pos) :+ """:""" :+ resultType :+ """ = {
     _display_ {
       {
-""" :+ templateCode(root, resultType) :+ """
+""" :+ templateCode(root, Some(resultType)) :+ """
       }
     }
   }
@@ -812,6 +855,7 @@ object Source {
       lines: ListBuffer[(Int, Int)]
   ): Unit = {
     parts.foreach {
+      case c: Character                                  => source.append(c)
       case s: String                                     => source.append(s)
       case Source(code, pos @ OffsetPosition(_, offset)) => {
         source.append("/*" + pos + "*/")

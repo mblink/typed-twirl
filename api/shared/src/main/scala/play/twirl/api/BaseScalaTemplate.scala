@@ -4,15 +4,16 @@
 
 package play.twirl.api
 
-sealed abstract class BaseScalaTemplateLP[T <: Appendable[T], F <: Format[T]](format: F) {
-  final def _display_[V](v: V)(implicit formatValue: FormatValue[T, F, V]): T = formatValue(format, v)
+// The exotic name $twirl__format is on purpose to avoid clashes with user defined vars in templates (#112)
+sealed abstract class BaseScalaTemplateLP[T <: Appendable[T], F <: Format[T]]($twirl__format: F) {
+  final def _display_[V](v: V)(implicit formatValue: FormatValue[T, F, V]): T = formatValue($twirl__format, v)
 }
 
-case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]](format: F) extends BaseScalaTemplateLP[T, F](format) {
+case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]]($twirl__format: F) extends BaseScalaTemplateLP[T, F]($twirl__format) {
   // The overloaded methods are here for speed. The compiled templates
   // can take advantage of them for a 12% performance boost
-  def _display_(x: String): T            = if (x eq null) format.empty else format.escape(x)
-  def _display_(x: Unit): T              = format.empty
-  def _display_(x: scala.xml.NodeSeq): T = if (x eq null) format.empty else format.raw(x.toString())
-  def _display_(x: T): T                 = if (x eq null) format.empty else x
+  def _display_(x: String): T            = if (x eq null) $twirl__format.empty else $twirl__format.escape(x)
+  def _display_(x: Unit): T              = $twirl__format.empty
+  def _display_(x: scala.xml.NodeSeq): T = if (x eq null) $twirl__format.empty else $twirl__format.raw(x.toString())
+  def _display_(x: T): T                 = if (x eq null) $twirl__format.empty else x
 }

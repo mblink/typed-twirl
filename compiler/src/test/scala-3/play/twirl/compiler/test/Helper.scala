@@ -24,7 +24,7 @@ import scala.jdk.CollectionConverters.*
 import play.twirl.parser.TwirlIO
 
 object Helper {
-  case class CompilationError(message: String, line: Int, column: Int) extends RuntimeException(message)
+  case class CompilationError(message: String, line: Int, point: Int) extends RuntimeException(message)
 
   class CompilerHelper(sourceDir: File, val generatedDir: File, generatedClasses: File) {
     import java.net.*
@@ -93,7 +93,12 @@ object Helper {
       val reporter = driver.compile()
 
       if reporter.hasErrors then {
-        val error   = reporter.allErrors.sortBy(_.pos.point).head
+        val errorsSortedAll            = reporter.allErrors.sortBy(_.pos.point)
+        val errorsSortedWithoutZeroPos =
+          errorsSortedAll.filterNot(e => mapper.mapLine(e.pos.line + 1) == 0 && mapper.mapPosition(e.pos.point) == 0)
+        // We filter out any errors that are mapped to line 0 and column 0, because since Scalameta 4.14.1 it's likely
+        // those are very general errors. However, fall back to all errors in case after filtering no errors are left.
+        val error   = (if errorsSortedWithoutZeroPos.isEmpty then errorsSortedAll else errorsSortedWithoutZeroPos).head
         val message = error.msg
         val pos     = error.pos
         throw CompilationError(message.toString, mapper.mapLine(pos.line + 1), mapper.mapPosition(pos.point))
@@ -116,6 +121,7 @@ object Helper {
             // Some of Twirl's tests verify that the template cannot be compiled.
             // It would be confusing to the developer if a compile error message were displayed at that time.
           }
+          def echoMessage(msg: String): Unit = { }
         }
 
         given Context = rootCtx.fresh

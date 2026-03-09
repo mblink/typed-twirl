@@ -9,7 +9,7 @@ import java.io._
 import play.twirl.parser.TwirlIO
 
 object Helper {
-  case class CompilationError(message: String, line: Int, column: Int) extends RuntimeException(message)
+  case class CompilationError(message: String, line: Int, point: Int) extends RuntimeException(message)
 
   class CompilerHelper(sourceDir: File, val generatedDir: File, generatedClasses: File) {
     import java.net._
@@ -32,13 +32,9 @@ object Helper {
     val compiler = {
       def additionalClassPathEntry: Option[String] =
         Some(
-          Class
-            .forName("play.twirl.compiler.TwirlCompiler")
-            .getClassLoader
-            .asInstanceOf[URLClassLoader]
-            .getURLs
-            .map(url => new File(url.toURI))
-            .mkString(":")
+          List(play.twirl.compiler.TwirlCompiler.getClass, play.twirl.api.Html.getClass, scala.xml.NodeSeq.getClass)
+            .map(_.getProtectionDomain.getCodeSource.getLocation)
+            .mkString(File.pathSeparator)
         )
 
       val settings          = new Settings
@@ -116,9 +112,9 @@ object Helper {
       run.compile(List(generated.getAbsolutePath))
 
       compileErrors.headOption.foreach {
-        case CompilationError(msg, line, column) => {
+        case CompilationError(msg, line, point) => {
           compileErrors.clear()
-          throw CompilationError(msg, mapper.mapLine(line), mapper.mapPosition(column))
+          throw CompilationError(msg, mapper.mapLine(line), mapper.mapPosition(point))
         }
       }
 

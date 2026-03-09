@@ -90,7 +90,7 @@ lazy val compiler = project
       }
     },
     libraryDependencies += parserCombinators(scalaVersion.value),
-    libraryDependencies += "org.scalameta" %% "parsers" % "4.13.9",
+    libraryDependencies += "org.scalameta" %% "parsers" % "4.14.2",
     run / fork                             := true,
     buildInfoKeys                          := Seq[BuildInfoKey](scalaVersion),
     buildInfoPackage                       := "play.twirl.compiler",
@@ -108,14 +108,14 @@ lazy val plugin = project
     name                                    := "sbt-typed-twirl",
     organization                            := "bondlink",
     scalaVersion                            := Scala212,
-    crossScalaVersions                      := Seq(Scala212, Scala37),
+    crossScalaVersions                      := Seq(Scala212, Scala38),
     libraryDependencies += "org.scalatest" %%% "scalatest" % ScalaTestVersion % Test,
     pluginCrossBuild / sbtVersion           := {
       scalaBinaryVersion.value match {
         case "2.12" =>
           sbtVersion.value
         case _ =>
-          "2.0.0-RC6"
+          "2.0.0-RC9"
       }
     },
     Compile / resourceGenerators += generateVersionFile.taskValue,

@@ -10,30 +10,66 @@ object TreeNodes {
   sealed abstract class TemplateTree
   sealed abstract class ScalaExpPart
 
-  case class Params(code: String) extends Positional
+  trait LocalMember extends Positional {
+    val name: PosString
+    val resultType: Option[PosString]
+    val code: Simple
+  }
+  trait BaseTemplate extends Positional {
+    val imports: collection.Seq[Simple]
+    val members: collection.Seq[LocalMember]
+    val sub: collection.Seq[SubTemplate]
+    val content: collection.Seq[TemplateTree]
+  }
+
   case class Constructor(comment: Option[Comment], params: PosString)
   case class Template(
-      name: PosString,
       constructor: Option[Constructor],
       comment: Option[Comment],
       params: PosString,
       topImports: collection.Seq[Simple],
       imports: collection.Seq[Simple],
-      defs: collection.Seq[Def],
-      sub: collection.Seq[Template],
+      members: collection.Seq[LocalMember],
+      sub: collection.Seq[SubTemplate],
       content: collection.Seq[TemplateTree]
-  ) extends Positional
+  ) extends BaseTemplate
+  case class SubTemplate(
+      declaration: Either[
+        Boolean, // left: true->var, false->def
+        Boolean  // right: it is a val. true->lazy, false->eager
+      ],
+      name: PosString,
+      params: PosString,
+      imports: collection.Seq[Simple],
+      members: collection.Seq[LocalMember],
+      sub: collection.Seq[SubTemplate],
+      content: collection.Seq[TemplateTree]
+  ) extends BaseTemplate
+  case class BlockTemplate(
+      imports: collection.Seq[Simple],
+      members: collection.Seq[LocalMember],
+      sub: collection.Seq[SubTemplate],
+      content: collection.Seq[TemplateTree],
+  ) extends BaseTemplate {
+
+    /**
+     * If this template contains more than just basic content: imports, vals, defs, sub-templates,...
+     */
+    def rich() = !imports.isEmpty || !members.isEmpty || !sub.isEmpty
+  }
   case class PosString(str: String) extends Positional {
     override def toString: String = str
   }
-  case class Def(name: PosString, params: PosString, resultType: Option[PosString], code: Simple) extends Positional
+  case class Def(name: PosString, params: PosString, resultType: Option[PosString], code: Simple) extends LocalMember
+  case class Val(name: PosString, isLazy: Boolean, resultType: Option[PosString], code: Simple)   extends LocalMember
+  case class Var(name: PosString, resultType: Option[PosString], code: Simple)                    extends LocalMember
   case class Plain(text: String)                           extends TemplateTree with Positional
   case class Display(exp: ScalaExp)                        extends TemplateTree with Positional
   case class Comment(msg: String)                          extends TemplateTree with Positional
   case class ScalaExp(parts: collection.Seq[ScalaExpPart]) extends TemplateTree with Positional
+  case class Reassignment(ref: Either[SubTemplate, Var])   extends TemplateTree with Positional
   case class Simple(code: String)                          extends ScalaExpPart with Positional
-  case class Block(whitespace: String, args: Option[PosString], content: collection.Seq[TemplateTree])
+  case class Block(whitespace: String, args: Option[PosString], contents: BlockTemplate)
       extends ScalaExpPart
       with Positional
-  case class Value(ident: PosString, block: Block) extends Positional
 }
