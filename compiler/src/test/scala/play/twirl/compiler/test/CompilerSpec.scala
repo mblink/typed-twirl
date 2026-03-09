@@ -536,7 +536,7 @@ class CompilerSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach {
         )
       }
     }
-    */
+     */
 
     "compile successfully shadowing using pure code blocks" when {
 
@@ -687,7 +687,7 @@ class CompilerSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach {
           """bar2bar2bar2bar5bar5bar1"""
         )
       }
-      */
+       */
 
       "reassigning var in if shadowing var in if shadowing var" in {
         TwirlIO.writeStringToFile(
@@ -914,7 +914,7 @@ class CompilerSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach {
           """bar2bar2bar2bar5bar5bar1"""
         )
       }
-      */
+       */
 
       "reassigning var in if shadowing var in if shadowing var" in {
         TwirlIO.writeStringToFile(

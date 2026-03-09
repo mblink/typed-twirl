@@ -9,7 +9,8 @@ sealed abstract class BaseScalaTemplateLP[T <: Appendable[T], F <: Format[T]]($t
   final def _display_[V](v: V)(implicit formatValue: FormatValue[T, F, V]): T = formatValue($twirl__format, v)
 }
 
-case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]]($twirl__format: F) extends BaseScalaTemplateLP[T, F]($twirl__format) {
+case class BaseScalaTemplate[T <: Appendable[T], F <: Format[T]]($twirl__format: F)
+    extends BaseScalaTemplateLP[T, F]($twirl__format) {
   // The overloaded methods are here for speed. The compiled templates
   // can take advantage of them for a 12% performance boost
   def _display_(x: String): T            = if (x eq null) $twirl__format.empty else $twirl__format.escape(x)
